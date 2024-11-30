@@ -1,0 +1,15 @@
+{
+  "cSpell.words": [
+    "BGRA",
+    "CCOEFF",
+    "imdecode",
+    "imgcodecs",
+    "imgproc",
+    "imread",
+    "imwrite",
+    "Luma",
+    "screencap",
+    "thiserror",
+    "xcap"
+  ]
+}
