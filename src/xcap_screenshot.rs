@@ -1,10 +1,10 @@
-use log::debug;
-use xcap::Monitor;
+use log::trace;
+use xcap::{image::DynamicImage, Monitor};
 
 use crate::cv::MatFromImage;
 
 pub fn screenshot(monitor: &Monitor) -> Result<MatFromImage, xcap::XCapError> {
-    debug!("Capture screenshot on monitor {}", monitor.name());
-    let image = monitor.capture_image()?;
-    Ok(MatFromImage::from_rgba_image(image))
+    trace!("Capture screenshot on monitor {}", monitor.name());
+    let image = DynamicImage::ImageRgba8(monitor.capture_image()?).into_rgb8();
+    Ok(MatFromImage::from_rgb_image(image))
 }

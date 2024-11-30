@@ -1,9 +1,9 @@
 use std::ops::{Deref, DerefMut};
 
-use log::debug;
+use log::{debug, trace};
 use opencv::{core::ToInputArray, imgproc, prelude::*};
 use thiserror::Error;
-use xcap::image::{GrayImage, ImageBuffer, Luma, RgbaImage};
+use xcap::image::{GrayImage, ImageBuffer, Luma, RgbImage};
 
 use crate::structs::Point;
 
@@ -87,9 +87,9 @@ pub struct MatFromImage {
 }
 
 impl MatFromImage {
-    pub fn from_rgba_image(mut image: RgbaImage) -> Self {
-        // Swap RGBA to BGRA for OpenCV
-        // This is a bit hacky since `image` crate has no BGRA support
+    pub fn from_rgb_image(mut image: RgbImage) -> Self {
+        // Swap RGB to BGR for OpenCV
+        // This is a bit hacky since `image` crate has no BGR support
         for pixel in image.pixels_mut() {
             let orig_red = pixel.0[0];
             pixel.0[0] = pixel.0[2];
@@ -102,9 +102,9 @@ impl MatFromImage {
                 Mat::new_rows_cols_with_data_unsafe(
                     height as i32,
                     width as i32,
-                    opencv::core::CV_8UC4, // Four 8 bit channel per pixel
+                    opencv::core::CV_8UC3, // Four 8 bit channel per pixel
                     raw_pixels.as_ptr() as *mut core::ffi::c_void,
-                    4 * width as usize, // Bytes shift per line
+                    3 * width as usize, // Bytes shift per line
                 )
                 .unwrap()
             },
@@ -197,9 +197,11 @@ pub fn cv_match_template_center(
     let x = max_loc.x + template_width / 2;
     let y = max_loc.y + template_height / 2;
 
-    debug!(
+    trace!(
         "Template matches on ({}, {}) with correlation {}",
-        x, y, max_val
+        x,
+        y,
+        max_val
     );
 
     Ok(MatchResult {
