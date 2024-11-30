@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use log::debug;
-use opencv::{imgproc, prelude::*};
+use opencv::{core::ToInputArray, imgproc, prelude::*};
 use thiserror::Error;
 use xcap::image::{GrayImage, ImageBuffer, Luma, RgbaImage};
 
@@ -133,6 +133,20 @@ impl AsRef<Mat> for MatFromImage {
     }
 }
 
+impl ToInputArray for MatFromImage {
+    fn input_array(
+        &self,
+    ) -> opencv::Result<opencv::boxed_ref::BoxedRef<opencv::core::_InputArray>> {
+        self.mat.input_array()
+    }
+}
+
+impl MatTraitConst for MatFromImage {
+    fn as_raw_Mat(&self) -> *const std::ffi::c_void {
+        self.mat.as_raw_Mat()
+    }
+}
+
 pub fn load_image_file(path: &str) -> Result<Mat, opencv::Error> {
     debug!("Loading image file from: {}", path);
     opencv::imgcodecs::imread(path, opencv::imgcodecs::IMREAD_COLOR)
@@ -156,8 +170,8 @@ pub fn save_image_file(path: &str, image: &Mat) -> Result<(), CvSaveImageError> 
 }
 
 pub fn cv_match_template_center(
-    source: &Mat,
-    template: &Mat,
+    source: &(impl MatTraitConst + ToInputArray),
+    template: &(impl MatTraitConst + ToInputArray),
 ) -> Result<MatchResult, opencv::Error> {
     let template_width = template.cols();
     let template_height = template.rows();
