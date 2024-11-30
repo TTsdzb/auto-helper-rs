@@ -1,9 +1,8 @@
-use std::time;
-
-use opencv::core::MatTraitConst;
+use std::{thread, time};
 
 use crate::{
     adb_commands, cv,
+    inputer::{EnigoInputer, Inputer},
     screenshoter::{AdbScreenshoter, Screenshoter, XcapScreenshoter},
     structs::Point,
 };
@@ -29,8 +28,6 @@ fn direct_adb_tap() {
 fn cv_match_template() {
     let source = cv::load_image_file("test_assets/image_source.png").unwrap();
     let template = cv::load_image_file("test_assets/image_template.png").unwrap();
-
-    println!("{} {}", source.depth(), source.channels());
 
     let res = cv::cv_match_template_center(&source, &template).unwrap();
 
@@ -83,4 +80,13 @@ fn adb_wait_template() {
     adb_screenshoter
         .wait_template_existence(&template, 0.9f32, interval)
         .unwrap();
+}
+
+#[test]
+fn trait_enigo_click() {
+    let mut inputer = EnigoInputer::new(&enigo::Settings::default()).unwrap();
+
+    thread::sleep(time::Duration::from_millis(500));
+
+    inputer.click(&Point::new(30, 1050)).unwrap();
 }

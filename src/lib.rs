@@ -2,6 +2,7 @@ pub use xcap::{image, Monitor};
 
 pub mod adb_commands;
 pub mod cv;
+pub mod inputer;
 pub mod screenshoter;
 pub mod structs;
 

@@ -2,11 +2,13 @@
   "cSpell.words": [
     "BGRA",
     "CCOEFF",
+    "enigo",
     "imdecode",
     "imgcodecs",
     "imgproc",
     "imread",
     "imwrite",
+    "inputer",
     "Luma",
     "screencap",
     "screenshoter",
