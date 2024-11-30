@@ -1,5 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
+use log::debug;
 use opencv::{imgproc, prelude::*};
 use thiserror::Error;
 use xcap::image::{GrayImage, ImageBuffer, Luma, RgbaImage};
@@ -133,6 +134,7 @@ impl AsRef<Mat> for MatFromImage {
 }
 
 pub fn load_image_file(path: &str) -> Result<Mat, opencv::Error> {
+    debug!("Loading image file from: {}", path);
     opencv::imgcodecs::imread(path, opencv::imgcodecs::IMREAD_COLOR)
 }
 
@@ -145,6 +147,7 @@ pub enum CvSaveImageError {
 }
 
 pub fn save_image_file(path: &str, image: &Mat) -> Result<(), CvSaveImageError> {
+    debug!("Saving image file to: {}", path);
     let success = opencv::imgcodecs::imwrite(path, &image, &opencv::core::Vector::new())?;
     match success {
         true => Ok(()),
@@ -179,6 +182,11 @@ pub fn cv_match_template_center(
     )?;
     let x = max_loc.x + template_width / 2;
     let y = max_loc.y + template_height / 2;
+
+    debug!(
+        "Template matches on ({}, {}) with correlation {}",
+        x, y, max_val
+    );
 
     Ok(MatchResult {
         pos: Point::new(x as u32, y as u32),

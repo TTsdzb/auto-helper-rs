@@ -1,4 +1,4 @@
-use log::trace;
+use log::{debug, trace};
 use opencv::prelude::*;
 use thiserror::Error;
 
@@ -21,7 +21,7 @@ pub enum AdbScreenshotError {
 }
 
 pub fn screenshot() -> Result<Mat, AdbScreenshotError> {
-    trace!("Running adb command for screenshot...");
+    debug!("Running adb command for screenshot...");
     let output = Command::new("adb")
         .arg("shell")
         .arg("screencap")
@@ -61,7 +61,7 @@ pub enum AdbTapError {
 }
 
 pub fn tap(point: &Point) -> Result<(), AdbTapError> {
-    trace!("Clicking on adb device at ({}, {})", &point.x, &point.y);
+    debug!("Clicking on adb device at ({}, {})", &point.x, &point.y);
     let output = Command::new("adb")
         .arg("shell")
         .arg("input")
