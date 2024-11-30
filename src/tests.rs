@@ -1,4 +1,4 @@
-use crate::{adb_commands, cv, structs::Point};
+use crate::{adb_commands, cv, structs::Point, xcap_screenshot};
 
 #[test]
 fn direct_adb_screenshot() {
@@ -15,6 +15,17 @@ fn direct_adb_tap() {
     adb_commands::tap(&point).unwrap();
 
     println!("Execute complete, please observe device behavior.");
+}
+
+#[test]
+fn direct_xcap_screenshot() {
+    let monitors = xcap::Monitor::all().unwrap();
+    let monitor = monitors.get(0).unwrap();
+
+    let image = xcap_screenshot::screenshot(monitor).unwrap();
+    cv::save_image_file("direct_xcap_screenshot.png", &image).unwrap();
+
+    println!("Execute complete, please check the image file.");
 }
 
 #[test]
