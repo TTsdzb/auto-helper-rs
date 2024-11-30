@@ -160,9 +160,9 @@ pub enum CvSaveImageError {
     ImageWriteError,
 }
 
-pub fn save_image_file(path: &str, image: &Mat) -> Result<(), CvSaveImageError> {
+pub fn save_image_file(path: &str, image: &impl ToInputArray) -> Result<(), CvSaveImageError> {
     debug!("Saving image file to: {}", path);
-    let success = opencv::imgcodecs::imwrite(path, &image, &opencv::core::Vector::new())?;
+    let success = opencv::imgcodecs::imwrite(path, image, &opencv::core::Vector::new())?;
     match success {
         true => Ok(()),
         false => Err(CvSaveImageError::ImageWriteError),
