@@ -1,15 +1,14 @@
 use core::time;
 use std::thread;
 
-use log::debug;
+use log::{debug, trace};
 use opencv::core::{MatTraitConst, ToInputArray};
 use thiserror::Error;
-use xcap::Monitor;
+use xcap::{image::DynamicImage, Monitor};
 
 use crate::{
     adb_commands,
-    cv::{self, MatchResult},
-    xcap_screenshot,
+    cv::{self, MatFromImage, MatchResult},
 };
 
 #[derive(Error, Debug)]
@@ -98,6 +97,8 @@ impl XcapScreenshoter {
 
 impl Screenshoter for XcapScreenshoter {
     fn screenshot(&self) -> Result<impl MatTraitConst + ToInputArray, ScreenshotError> {
-        Ok(xcap_screenshot::screenshot(&self.monitor)?)
+        trace!("Capture screenshot on monitor {}", self.monitor.name());
+        let image = DynamicImage::ImageRgba8(self.monitor.capture_image()?).into_rgb8();
+        Ok(MatFromImage::from_rgb_image(image))
     }
 }
