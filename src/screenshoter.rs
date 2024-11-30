@@ -64,10 +64,8 @@ pub trait Screenshoter {
         &self,
         template: &(impl MatTraitConst + ToInputArray),
         threshold: f32,
-        interval_secs: f32,
+        interval: time::Duration,
     ) -> Result<MatchResult, FindTemplateError> {
-        let interval = time::Duration::from_secs_f32(interval_secs);
-
         debug!("Waiting for a template...");
         let mut res = self.find_template_existence(template, threshold)?;
         while res.is_none() {

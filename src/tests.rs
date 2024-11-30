@@ -1,3 +1,5 @@
+use std::time;
+
 use opencv::core::MatTraitConst;
 
 use crate::{
@@ -76,8 +78,9 @@ fn xcap_wait_template() {
     let xcap_screenshoter = XcapScreenshoter::new(monitor);
 
     let template = cv::load_image_file("test_assets/image_wait_template.png").unwrap();
+    let interval = time::Duration::from_secs(1);
     xcap_screenshoter
-        .wait_template_existence(&template, 0.9f32, 1f32)
+        .wait_template_existence(&template, 0.9f32, interval)
         .unwrap();
 }
 
@@ -88,7 +91,8 @@ fn adb_wait_template() {
     let adb_screenshoter = AdbScreenshoter::default();
 
     let template = cv::load_image_file("test_assets/image_wait_template.png").unwrap();
+    let interval = time::Duration::from_secs(1);
     adb_screenshoter
-        .wait_template_existence(&template, 0.9f32, 1f32)
+        .wait_template_existence(&template, 0.9f32, interval)
         .unwrap();
 }
