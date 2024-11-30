@@ -87,7 +87,7 @@ pub struct MatFromImage {
 }
 
 impl MatFromImage {
-    pub fn from_image(mut image: RgbaImage) -> Self {
+    pub fn from_rgba_image(mut image: RgbaImage) -> Self {
         // Swap RGBA to BGRA for OpenCV
         // This is a bit hacky since `image` crate has no BGRA support
         for pixel in image.pixels_mut() {
