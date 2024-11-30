@@ -80,7 +80,7 @@ pub fn match_template_center(source: &NormalizedImage, template: &NormalizedImag
     }
 }
 
-struct MatFromImage {
+pub struct MatFromImage {
     _buffer: Vec<u8>,
     pub mat: Mat,
 }
