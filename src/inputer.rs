@@ -35,6 +35,12 @@ impl EnigoInputer {
             enigo: Enigo::new(settings)?,
         })
     }
+
+    pub fn default() -> Result<Self, enigo::NewConError> {
+        Ok(Self {
+            enigo: Enigo::new(&enigo::Settings::default())?,
+        })
+    }
 }
 
 impl Inputer for EnigoInputer {
