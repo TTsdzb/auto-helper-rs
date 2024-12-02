@@ -51,9 +51,8 @@ impl EnigoInputer {
         })
     }
 
-    pub fn default_with_factor(
-        #[cfg(target_os = "windows")] scale_factor: f32,
-    ) -> Result<Self, enigo::NewConError> {
+    #[cfg(target_os = "windows")]
+    pub fn default_with_factor(scale_factor: f32) -> Result<Self, enigo::NewConError> {
         Ok(Self {
             enigo: Enigo::new(&enigo::Settings::default())?,
             #[cfg(target_os = "windows")]
