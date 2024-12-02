@@ -84,7 +84,7 @@ fn adb_wait_template() {
 
 #[test]
 fn trait_enigo_click() {
-    let mut inputer = EnigoInputer::new(&enigo::Settings::default()).unwrap();
+    let mut inputer = EnigoInputer::default_with_factor(1.25).unwrap();
 
     thread::sleep(time::Duration::from_millis(500));
 
