@@ -86,7 +86,7 @@ pub fn load_image_file(path: &str) -> Result<Mat, opencv::Error> {
 
 #[derive(Error, Debug)]
 pub enum CvSaveImageError {
-    #[error("Could not encode the given image: {0:?}")]
+    #[error("Could not encode the given image: {0}")]
     ImageEncodeError(#[from] opencv::Error),
     #[error("Failed to write image file")]
     ImageWriteError,

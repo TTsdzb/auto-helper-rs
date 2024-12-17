@@ -8,7 +8,7 @@ use crate::structs::Point;
 
 #[derive(Error, Debug)]
 pub enum AdbScreenshotError {
-    #[error("Adb screenshot command invoke failed: {0:?}")]
+    #[error("Adb screenshot command invoke failed: {0}")]
     CommandError(#[from] io::Error),
     #[error("Adb screenshot command failed with return code {code:?}")]
     ExecutionError {
@@ -16,7 +16,7 @@ pub enum AdbScreenshotError {
         stdout: String,
         stderr: String,
     },
-    #[error("Failed to decode screenshot image: {0:?}")]
+    #[error("Failed to decode screenshot image: {0}")]
     ImageDecodeError(#[from] opencv::Error),
 }
 
@@ -50,7 +50,7 @@ pub fn screenshot() -> Result<Mat, AdbScreenshotError> {
 
 #[derive(Error, Debug)]
 pub enum AdbTapError {
-    #[error("Adb tap command invoke failed: {0:?}")]
+    #[error("Adb tap command invoke failed: {0}")]
     CommandError(#[from] io::Error),
     #[error("Adb tap command failed with return code {code:?}")]
     ExecutionError {

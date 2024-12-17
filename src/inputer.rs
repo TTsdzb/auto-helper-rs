@@ -6,9 +6,9 @@ use crate::{adb_commands, structs::Point};
 
 #[derive(Error, Debug)]
 pub enum InputError {
-    #[error("Failed to click on adb device: {0:?}")]
+    #[error("Failed to click on adb device: {0}")]
     AdbInputError(#[from] adb_commands::AdbTapError),
-    #[error("Failed to click on local device: {0:?}")]
+    #[error("Failed to click on local device: {0}")]
     EnigoInputError(#[from] enigo::InputError),
 }
 

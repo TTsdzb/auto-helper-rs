@@ -13,15 +13,15 @@ use crate::{
 
 #[derive(Error, Debug)]
 pub enum ScreenshotError {
-    #[error("Failed to capture screenshot from adb: {0:?}")]
+    #[error("Failed to capture screenshot from adb: {0}")]
     AdbScreenshotError(#[from] adb_commands::AdbScreenshotError),
-    #[error("Failed to capture screenshot from a local monitor: {0:?}")]
+    #[error("Failed to capture screenshot from a local monitor: {0}")]
     XcapScreenshotError(#[from] xcap::XCapError),
 }
 
 #[derive(Error, Debug)]
 pub enum FindTemplateError {
-    #[error("Screenshot failed when finding template on the screen: {0:?}")]
+    #[error("Screenshot failed when finding template on the screen: {0}")]
     ScreenshotError(#[from] ScreenshotError),
     #[error("Error occurred during matching when finding template on the screen")]
     MatchTemplateError(#[from] opencv::Error),
