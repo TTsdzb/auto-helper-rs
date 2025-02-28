@@ -28,26 +28,27 @@ pub fn cv_match_template_center(source: &DynamicImage, template: &DynamicImage) 
     let template_width = template.width();
     let template_height = template.height();
 
-    let mut source_grayscale = source.to_luma8();
-    let mut template_grayscale = template.to_luma8();
+    let mut source_width = source.width();
+    let mut source_height = source.height();
     let mut scale = 1;
-    while source_grayscale.width() > MATCH_SIZE_THRESHOLD
-        || source_grayscale.height() > MATCH_SIZE_THRESHOLD
-    {
-        source_grayscale = imageops::resize(
-            &source_grayscale,
-            source_grayscale.width() / 2,
-            source_grayscale.height() / 2,
-            FilterType::Nearest,
-        );
-        template_grayscale = imageops::resize(
-            &template_grayscale,
-            template_grayscale.width() / 2,
-            template_grayscale.height() / 2,
-            FilterType::Nearest,
-        );
+    while source_width > MATCH_SIZE_THRESHOLD || source_height > MATCH_SIZE_THRESHOLD {
+        source_width /= 2;
+        source_height /= 2;
         scale *= 2;
     }
+
+    let source_grayscale = imageops::resize(
+        &source.to_luma8(),
+        source.width() / scale,
+        source.height() / scale,
+        FilterType::Nearest,
+    );
+    let template_grayscale = imageops::resize(
+        &template.to_luma8(),
+        template.width() / scale,
+        template.height() / scale,
+        FilterType::Nearest,
+    );
 
     let match_result = template_matching::match_template_parallel(
         &source_grayscale,
