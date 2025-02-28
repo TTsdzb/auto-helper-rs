@@ -1,9 +1,8 @@
-use std::ops::{Deref, DerefMut};
-
+use image::imageops::FilterType;
+use image::{imageops, DynamicImage, ImageReader, ImageResult};
+use imageproc::template_matching;
+use imageproc::template_matching::MatchTemplateMethod;
 use log::{debug, trace};
-use opencv::{core::ToInputArray, imgproc, prelude::*};
-use thiserror::Error;
-use xcap::image::RgbImage;
 
 use crate::structs::Point;
 
@@ -13,131 +12,62 @@ pub struct MatchResult {
     pub correlation: f32,
 }
 
-pub struct MatFromImage {
-    _buffer: Vec<u8>,
-    pub mat: Mat,
-}
-
-impl MatFromImage {
-    pub fn from_rgb_image(mut image: RgbImage) -> Self {
-        // Swap RGB to BGR for OpenCV
-        // This is a bit hacky since `image` crate has no BGR support
-        for pixel in image.pixels_mut() {
-            let orig_red = pixel.0[0];
-            pixel.0[0] = pixel.0[2];
-            pixel.0[2] = orig_red;
-        }
-        let (width, height) = image.dimensions();
-        let raw_pixels = image.into_raw();
-        Self {
-            mat: unsafe {
-                Mat::new_rows_cols_with_data_unsafe(
-                    height as i32,
-                    width as i32,
-                    opencv::core::CV_8UC3, // Four 8 bit channel per pixel
-                    raw_pixels.as_ptr() as *mut core::ffi::c_void,
-                    3 * width as usize, // Bytes shift per line
-                )
-                .unwrap()
-            },
-            _buffer: raw_pixels,
-        }
-    }
-}
-
-impl Deref for MatFromImage {
-    type Target = Mat;
-
-    fn deref(&self) -> &Self::Target {
-        &self.mat
-    }
-}
-
-impl DerefMut for MatFromImage {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.mat
-    }
-}
-
-impl AsRef<Mat> for MatFromImage {
-    fn as_ref(&self) -> &Mat {
-        &self.mat
-    }
-}
-
-impl ToInputArray for MatFromImage {
-    fn input_array(
-        &self,
-    ) -> opencv::Result<opencv::boxed_ref::BoxedRef<opencv::core::_InputArray>> {
-        self.mat.input_array()
-    }
-}
-
-impl MatTraitConst for MatFromImage {
-    fn as_raw_Mat(&self) -> *const std::ffi::c_void {
-        self.mat.as_raw_Mat()
-    }
-}
-
-pub fn load_image_file(path: &str) -> Result<Mat, opencv::Error> {
+pub fn load_image_file(path: &str) -> ImageResult<DynamicImage> {
     debug!("Loading image file from: {}", path);
-    opencv::imgcodecs::imread(path, opencv::imgcodecs::IMREAD_COLOR)
+    ImageReader::open(path)?.decode()
 }
 
-#[derive(Error, Debug)]
-pub enum CvSaveImageError {
-    #[error("Could not encode the given image: {0}")]
-    ImageEncodeError(#[from] opencv::Error),
-    #[error("Failed to write image file")]
-    ImageWriteError,
-}
-
-pub fn save_image_file(path: &str, image: &impl ToInputArray) -> Result<(), CvSaveImageError> {
+pub fn save_image_file(path: &str, image: &DynamicImage) -> ImageResult<()> {
     debug!("Saving image file to: {}", path);
-    let success = opencv::imgcodecs::imwrite(path, image, &opencv::core::Vector::new())?;
-    match success {
-        true => Ok(()),
-        false => Err(CvSaveImageError::ImageWriteError),
-    }
+    image.save(path)
 }
 
-pub fn cv_match_template_center(
-    source: &(impl MatTraitConst + ToInputArray),
-    template: &(impl MatTraitConst + ToInputArray),
-) -> Result<MatchResult, opencv::Error> {
-    let template_width = template.cols();
-    let template_height = template.rows();
+const MATCH_SIZE_THRESHOLD: u32 = 500;
 
-    let mut result = Mat::default();
-    imgproc::match_template(
-        source,
-        template,
-        &mut result,
-        imgproc::TM_CCOEFF_NORMED,
-        &Mat::default(),
-    )?;
-    let mut max_val = 0f64;
-    let mut max_loc = opencv::core::Point::default();
-    opencv::core::min_max_loc(
-        &result,
-        None,
-        Some(&mut max_val),
-        None,
-        Some(&mut max_loc),
-        &Mat::default(),
-    )?;
-    let x = max_loc.x + template_width / 2;
-    let y = max_loc.y + template_height / 2;
+pub fn cv_match_template_center(source: &DynamicImage, template: &DynamicImage) -> MatchResult {
+    let template_width = template.width();
+    let template_height = template.height();
+
+    let mut source_grayscale = source.to_luma8();
+    let mut template_grayscale = template.to_luma8();
+    let mut scale = 1;
+    while source_grayscale.width() > MATCH_SIZE_THRESHOLD
+        || source_grayscale.height() > MATCH_SIZE_THRESHOLD
+    {
+        source_grayscale = imageops::resize(
+            &source_grayscale,
+            source_grayscale.width() / 2,
+            source_grayscale.height() / 2,
+            FilterType::Nearest,
+        );
+        template_grayscale = imageops::resize(
+            &template_grayscale,
+            template_grayscale.width() / 2,
+            template_grayscale.height() / 2,
+            FilterType::Nearest,
+        );
+        scale *= 2;
+    }
+
+    let match_result = template_matching::match_template_parallel(
+        &source_grayscale,
+        &template_grayscale,
+        MatchTemplateMethod::CrossCorrelationNormalized,
+    );
+    let extremes = template_matching::find_extremes(&match_result);
+
+    let x = extremes.max_value_location.0 * scale + template_width / 2;
+    let y = extremes.max_value_location.1 * scale + template_height / 2;
 
     trace!(
         "Template matches on ({}, {}) with correlation {}",
         x,
         y,
-        max_val
+        extremes.max_value
     );
 
-    Ok(MatchResult {
-        pos: Point::new(x as u32, y as u32),
-        correlation: max_val as f32,
-    })
+    MatchResult {
+        pos: Point::new(x, y),
+        correlation: extremes.max_value,
+    }
 }

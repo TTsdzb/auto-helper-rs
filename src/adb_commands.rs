@@ -1,10 +1,10 @@
 use log::{debug, trace};
-use opencv::prelude::*;
 use thiserror::Error;
 
-use std::{io, process::Command};
-
 use crate::structs::Point;
+use image::{DynamicImage, ImageError, ImageReader};
+use std::io::Cursor;
+use std::{io, process::Command};
 
 #[derive(Error, Debug)]
 pub enum AdbScreenshotError {
@@ -17,10 +17,10 @@ pub enum AdbScreenshotError {
         stderr: String,
     },
     #[error("Failed to decode screenshot image: {0}")]
-    ImageDecodeError(#[from] opencv::Error),
+    ImageDecodeError(#[from] ImageError),
 }
 
-pub fn screenshot() -> Result<Mat, AdbScreenshotError> {
+pub fn screenshot() -> Result<DynamicImage, AdbScreenshotError> {
     debug!("Running adb command for screenshot...");
     let output = Command::new("adb")
         .arg("shell")
@@ -42,10 +42,9 @@ pub fn screenshot() -> Result<Mat, AdbScreenshotError> {
         });
     }
 
-    Ok(opencv::imgcodecs::imdecode(
-        &output.stdout.as_slice(),
-        opencv::imgcodecs::IMREAD_COLOR,
-    )?)
+    Ok(ImageReader::new(Cursor::new(output.stdout))
+        .with_guessed_format()?
+        .decode()?)
 }
 
 #[derive(Error, Debug)]

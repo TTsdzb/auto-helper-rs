@@ -1,7 +1,6 @@
 pub use enigo;
-pub use opencv::prelude as cv_prelude;
-pub use opencv::Error as CvError;
-pub use xcap::{image, Monitor, XCapError};
+pub use image;
+pub use xcap::{Monitor, XCapError};
 
 pub mod adb_commands;
 pub mod cv;

@@ -1,12 +1,13 @@
 [package]
 name = "auto-helper-rs"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
 [dependencies]
 enigo = { version = "0.3.0", features = ["wayland"] }
+image = "0.25.5"
+imageproc = { version = "0.25.0", features = ["rayon"] }
 log = "0.4.22"
-opencv = "0.93.4"
 serde = { version = "1.0.216", features = ["derive"] }
 thiserror = "2.0.3"
 xcap = "0.0.14"

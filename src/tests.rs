@@ -29,7 +29,7 @@ fn cv_match_template() {
     let source = cv::load_image_file("test_assets/image_source.png").unwrap();
     let template = cv::load_image_file("test_assets/image_template.png").unwrap();
 
-    let res = cv::cv_match_template_center(&source, &template).unwrap();
+    let res = cv::cv_match_template_center(&source, &template);
 
     println!("{:#?}", res);
 }

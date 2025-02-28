@@ -1,14 +1,14 @@
 use core::time;
 use std::thread;
 
+use image::DynamicImage;
 use log::{debug, trace};
-use opencv::core::{MatTraitConst, ToInputArray};
 use thiserror::Error;
-use xcap::{image::DynamicImage, Monitor};
+use xcap::Monitor;
 
 use crate::{
     adb_commands,
-    cv::{self, MatFromImage, MatchResult},
+    cv::{self, MatchResult},
 };
 
 #[derive(Error, Debug)]
@@ -23,24 +23,19 @@ pub enum ScreenshotError {
 pub enum FindTemplateError {
     #[error("Screenshot failed when finding template on the screen: {0}")]
     ScreenshotError(#[from] ScreenshotError),
-    #[error("Error occurred during matching when finding template on the screen")]
-    MatchTemplateError(#[from] opencv::Error),
 }
 
 pub trait Screenshoter {
-    fn screenshot(&self) -> Result<impl MatTraitConst + ToInputArray, ScreenshotError>;
+    fn screenshot(&self) -> Result<DynamicImage, ScreenshotError>;
 
-    fn find_template(
-        &self,
-        template: &(impl MatTraitConst + ToInputArray),
-    ) -> Result<MatchResult, FindTemplateError> {
+    fn find_template(&self, template: &DynamicImage) -> Result<MatchResult, FindTemplateError> {
         let scr = self.screenshot()?;
-        Ok(cv::cv_match_template_center(&scr, template)?)
+        Ok(cv::cv_match_template_center(&scr, template))
     }
 
     fn find_template_existence(
         &self,
-        template: &(impl MatTraitConst + ToInputArray),
+        template: &DynamicImage,
         threshold: f32,
     ) -> Result<Option<MatchResult>, FindTemplateError> {
         let find_res = self.find_template(template)?;
@@ -61,7 +56,7 @@ pub trait Screenshoter {
 
     fn wait_template_existence(
         &self,
-        template: &(impl MatTraitConst + ToInputArray),
+        template: &DynamicImage,
         threshold: f32,
         interval: time::Duration,
     ) -> Result<MatchResult, FindTemplateError> {
@@ -80,7 +75,7 @@ pub trait Screenshoter {
 pub struct AdbScreenshoter;
 
 impl Screenshoter for AdbScreenshoter {
-    fn screenshot(&self) -> Result<impl MatTraitConst + ToInputArray, ScreenshotError> {
+    fn screenshot(&self) -> Result<DynamicImage, ScreenshotError> {
         Ok(adb_commands::screenshot()?)
     }
 }
@@ -96,9 +91,8 @@ impl XcapScreenshoter {
 }
 
 impl Screenshoter for XcapScreenshoter {
-    fn screenshot(&self) -> Result<impl MatTraitConst + ToInputArray, ScreenshotError> {
+    fn screenshot(&self) -> Result<DynamicImage, ScreenshotError> {
         trace!("Capture screenshot on monitor {}", self.monitor.name());
-        let image = DynamicImage::ImageRgba8(self.monitor.capture_image()?).into_rgb8();
-        Ok(MatFromImage::from_rgb_image(image))
+        Ok(DynamicImage::ImageRgba8(self.monitor.capture_image()?))
     }
 }
