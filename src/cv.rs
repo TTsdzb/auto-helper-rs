@@ -28,27 +28,44 @@ pub fn cv_match_template_center(source: &DynamicImage, template: &DynamicImage) 
     let template_width = template.width();
     let template_height = template.height();
 
-    let mut source_width = source.width();
-    let mut source_height = source.height();
-    let mut scale = 1;
-    while source_width > MATCH_SIZE_THRESHOLD || source_height > MATCH_SIZE_THRESHOLD {
-        source_width /= 2;
-        source_height /= 2;
-        scale *= 2;
-    }
-
-    let source_grayscale = imageops::resize(
-        &source.to_luma8(),
-        source.width() / scale,
-        source.height() / scale,
-        FilterType::Nearest,
-    );
-    let template_grayscale = imageops::resize(
-        &template.to_luma8(),
-        template.width() / scale,
-        template.height() / scale,
-        FilterType::Nearest,
-    );
+    let source_width = source.width();
+    let source_height = source.height();
+    let mut scale = 1.0f32;
+    let (source_grayscale, template_grayscale) = if source_width > MATCH_SIZE_THRESHOLD {
+        scale = source_width as f32 / MATCH_SIZE_THRESHOLD as f32;
+        (
+            imageops::resize(
+                &source.to_luma8(),
+                MATCH_SIZE_THRESHOLD,
+                (source.height() as f32 / scale) as u32,
+                FilterType::Nearest,
+            ),
+            imageops::resize(
+                &template.to_luma8(),
+                (template.width() as f32 / scale) as u32,
+                (template.height() as f32 / scale) as u32,
+                FilterType::Nearest,
+            ),
+        )
+    } else if source_height > MATCH_SIZE_THRESHOLD {
+        scale = source_height as f32 / MATCH_SIZE_THRESHOLD as f32;
+        (
+            imageops::resize(
+                &source.to_luma8(),
+                (source.width() as f32 / scale) as u32,
+                MATCH_SIZE_THRESHOLD,
+                FilterType::Nearest,
+            ),
+            imageops::resize(
+                &template.to_luma8(),
+                (template.width() as f32 / scale) as u32,
+                (template.height() as f32 / scale) as u32,
+                FilterType::Nearest,
+            ),
+        )
+    } else {
+        (source.to_luma8(), template.to_luma8())
+    };
 
     let match_result = template_matching::match_template_parallel(
         &source_grayscale,
@@ -57,8 +74,8 @@ pub fn cv_match_template_center(source: &DynamicImage, template: &DynamicImage) 
     );
     let extremes = template_matching::find_extremes(&match_result);
 
-    let x = extremes.max_value_location.0 * scale + template_width / 2;
-    let y = extremes.max_value_location.1 * scale + template_height / 2;
+    let x = (extremes.max_value_location.0 as f32 * scale) as u32 + template_width / 2;
+    let y = (extremes.max_value_location.1 as f32 * scale) as u32 + template_height / 2;
 
     trace!(
         "Template matches on ({}, {}) with correlation {}",
