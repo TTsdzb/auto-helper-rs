@@ -31,41 +31,42 @@ pub fn cv_match_template_center(source: &DynamicImage, template: &DynamicImage) 
     let source_width = source.width();
     let source_height = source.height();
     let mut scale = 1.0f32;
-    let (source_grayscale, template_grayscale) = if source_width > MATCH_SIZE_THRESHOLD {
-        scale = source_width as f32 / MATCH_SIZE_THRESHOLD as f32;
-        (
-            imageops::resize(
-                &source.to_luma8(),
-                MATCH_SIZE_THRESHOLD,
-                (source.height() as f32 / scale) as u32,
-                FilterType::Nearest,
-            ),
-            imageops::resize(
-                &template.to_luma8(),
-                (template.width() as f32 / scale) as u32,
-                (template.height() as f32 / scale) as u32,
-                FilterType::Nearest,
-            ),
-        )
-    } else if source_height > MATCH_SIZE_THRESHOLD {
-        scale = source_height as f32 / MATCH_SIZE_THRESHOLD as f32;
-        (
-            imageops::resize(
-                &source.to_luma8(),
-                (source.width() as f32 / scale) as u32,
-                MATCH_SIZE_THRESHOLD,
-                FilterType::Nearest,
-            ),
-            imageops::resize(
-                &template.to_luma8(),
-                (template.width() as f32 / scale) as u32,
-                (template.height() as f32 / scale) as u32,
-                FilterType::Nearest,
-            ),
-        )
-    } else {
-        (source.to_luma8(), template.to_luma8())
-    };
+    let (source_grayscale, template_grayscale) =
+        if source_width >= source_height && source_width > MATCH_SIZE_THRESHOLD {
+            scale = source_width as f32 / MATCH_SIZE_THRESHOLD as f32;
+            (
+                imageops::resize(
+                    &source.to_luma8(),
+                    MATCH_SIZE_THRESHOLD,
+                    (source.height() as f32 / scale) as u32,
+                    FilterType::Nearest,
+                ),
+                imageops::resize(
+                    &template.to_luma8(),
+                    (template.width() as f32 / scale) as u32,
+                    (template.height() as f32 / scale) as u32,
+                    FilterType::Nearest,
+                ),
+            )
+        } else if source_height > MATCH_SIZE_THRESHOLD {
+            scale = source_height as f32 / MATCH_SIZE_THRESHOLD as f32;
+            (
+                imageops::resize(
+                    &source.to_luma8(),
+                    (source.width() as f32 / scale) as u32,
+                    MATCH_SIZE_THRESHOLD,
+                    FilterType::Nearest,
+                ),
+                imageops::resize(
+                    &template.to_luma8(),
+                    (template.width() as f32 / scale) as u32,
+                    (template.height() as f32 / scale) as u32,
+                    FilterType::Nearest,
+                ),
+            )
+        } else {
+            (source.to_luma8(), template.to_luma8())
+        };
 
     let match_result = template_matching::match_template_parallel(
         &source_grayscale,
