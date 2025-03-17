@@ -28,9 +28,15 @@ pub enum FindTemplateError {
 pub trait Screenshoter {
     fn screenshot(&self) -> Result<DynamicImage, ScreenshotError>;
 
+    fn get_match_size_threshold(&self) -> u32;
+
     fn find_template(&self, template: &DynamicImage) -> Result<MatchResult, FindTemplateError> {
         let scr = self.screenshot()?;
-        Ok(cv::cv_match_template_center(&scr, template))
+        Ok(cv::cv_match_template_center(
+            &scr,
+            template,
+            self.get_match_size_threshold(),
+        ))
     }
 
     fn find_template_existence(
@@ -71,22 +77,39 @@ pub trait Screenshoter {
     }
 }
 
-#[derive(Default)]
-pub struct AdbScreenshoter;
+pub struct AdbScreenshoter {
+    match_size_threshold: u32,
+}
+
+impl AdbScreenshoter {
+    pub fn new(match_size_threshold: u32) -> Self {
+        Self {
+            match_size_threshold,
+        }
+    }
+}
 
 impl Screenshoter for AdbScreenshoter {
     fn screenshot(&self) -> Result<DynamicImage, ScreenshotError> {
         Ok(adb_commands::screenshot()?)
     }
+
+    fn get_match_size_threshold(&self) -> u32 {
+        self.match_size_threshold
+    }
 }
 
 pub struct XcapScreenshoter {
     monitor: Monitor,
+    match_size_threshold: u32,
 }
 
 impl XcapScreenshoter {
-    pub fn new(monitor: Monitor) -> Self {
-        Self { monitor }
+    pub fn new(monitor: Monitor, match_size_threshold: u32) -> Self {
+        Self {
+            monitor,
+            match_size_threshold,
+        }
     }
 }
 
@@ -94,5 +117,9 @@ impl Screenshoter for XcapScreenshoter {
     fn screenshot(&self) -> Result<DynamicImage, ScreenshotError> {
         trace!("Capture screenshot on monitor {}", self.monitor.name());
         Ok(DynamicImage::ImageRgba8(self.monitor.capture_image()?))
+    }
+
+    fn get_match_size_threshold(&self) -> u32 {
+        self.match_size_threshold
     }
 }

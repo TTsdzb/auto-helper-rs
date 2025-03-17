@@ -22,9 +22,11 @@ pub fn save_image_file(path: &str, image: &DynamicImage) -> ImageResult<()> {
     image.save(path)
 }
 
-const MATCH_SIZE_THRESHOLD: u32 = 500;
-
-pub fn cv_match_template_center(source: &DynamicImage, template: &DynamicImage) -> MatchResult {
+pub fn cv_match_template_center(
+    source: &DynamicImage,
+    template: &DynamicImage,
+    match_size_threshold: u32,
+) -> MatchResult {
     let template_width = template.width();
     let template_height = template.height();
 
@@ -32,12 +34,12 @@ pub fn cv_match_template_center(source: &DynamicImage, template: &DynamicImage) 
     let source_height = source.height();
     let mut scale = 1.0f32;
     let (source_grayscale, template_grayscale) =
-        if source_width >= source_height && source_width > MATCH_SIZE_THRESHOLD {
-            scale = source_width as f32 / MATCH_SIZE_THRESHOLD as f32;
+        if source_width >= source_height && source_width > match_size_threshold {
+            scale = source_width as f32 / match_size_threshold as f32;
             (
                 imageops::resize(
                     &source.to_luma8(),
-                    MATCH_SIZE_THRESHOLD,
+                    match_size_threshold,
                     (source.height() as f32 / scale) as u32,
                     FilterType::Nearest,
                 ),
@@ -48,13 +50,13 @@ pub fn cv_match_template_center(source: &DynamicImage, template: &DynamicImage) 
                     FilterType::Nearest,
                 ),
             )
-        } else if source_height > MATCH_SIZE_THRESHOLD {
-            scale = source_height as f32 / MATCH_SIZE_THRESHOLD as f32;
+        } else if source_height > match_size_threshold {
+            scale = source_height as f32 / match_size_threshold as f32;
             (
                 imageops::resize(
                     &source.to_luma8(),
                     (source.width() as f32 / scale) as u32,
-                    MATCH_SIZE_THRESHOLD,
+                    match_size_threshold,
                     FilterType::Nearest,
                 ),
                 imageops::resize(

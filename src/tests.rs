@@ -29,7 +29,7 @@ fn cv_match_template() {
     let source = cv::load_image_file("test_assets/image_source.png").unwrap();
     let template = cv::load_image_file("test_assets/image_template.png").unwrap();
 
-    let res = cv::cv_match_template_center(&source, &template);
+    let res = cv::cv_match_template_center(&source, &template, 1000);
 
     println!("{:#?}", res);
 }
@@ -38,7 +38,7 @@ fn cv_match_template() {
 fn trait_xcap_screenshot() {
     let monitors = xcap::Monitor::all().unwrap();
     let monitor = monitors.into_iter().next().unwrap();
-    let xcap_screenshoter = XcapScreenshoter::new(monitor);
+    let xcap_screenshoter = XcapScreenshoter::new(monitor, 1000);
 
     let image = xcap_screenshoter.screenshot().unwrap();
     cv::save_image_file("trait_xcap_screenshot.png", &image).unwrap();
@@ -48,7 +48,7 @@ fn trait_xcap_screenshot() {
 
 #[test]
 fn trait_adb_screenshot() {
-    let adb_screenshoter = AdbScreenshoter::default();
+    let adb_screenshoter = AdbScreenshoter::new(1000);
 
     let image = adb_screenshoter.screenshot().unwrap();
     cv::save_image_file("trait_adb_screenshot.png", &image).unwrap();
@@ -60,7 +60,7 @@ fn trait_adb_screenshot() {
 fn xcap_wait_template() {
     let monitors = xcap::Monitor::all().unwrap();
     let monitor = monitors.into_iter().next().unwrap();
-    let xcap_screenshoter = XcapScreenshoter::new(monitor);
+    let xcap_screenshoter = XcapScreenshoter::new(monitor, 1000);
 
     let template = cv::load_image_file("test_assets/image_wait_template.png").unwrap();
     let interval = time::Duration::from_secs(1);
@@ -73,7 +73,7 @@ fn xcap_wait_template() {
 fn adb_wait_template() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
 
-    let adb_screenshoter = AdbScreenshoter::default();
+    let adb_screenshoter = AdbScreenshoter::new(1000);
 
     let template = cv::load_image_file("test_assets/image_wait_template.png").unwrap();
     let interval = time::Duration::from_secs(1);
